@@ -58,15 +58,39 @@ var App = function(name, version)
 		self.context = self.canvas.getContext('2d');
 		self.newNode().title("Start");
 
-		if (osName != "Windows" && self.gui != undefined)
+		var nativeMenuBar = new nw.Menu({ type: "menubar" });
+		if(osName == "MacOS")
 		{
-			var win = self.gui.Window.get();
-			var nativeMenuBar = new self.gui.Menu({ type: "menubar" });
-			if(nativeMenuBar.createMacBuiltin) {
-				nativeMenuBar.createMacBuiltin("Yarn");
-			}
-			win.menu = nativeMenuBar;
+			nativeMenuBar.createMacBuiltin("Yarn");
 		}
+
+		var modifier = osName == "MacOS" ? "cmd" : "ctrl";
+
+		var item = new nw.MenuItem({
+			label: "Save",
+			click: function() {
+				data.trySaveCurrent();
+			},
+			key: "s",
+			modifiers: modifier,
+		});
+
+		var submenu = new nw.Menu();
+		submenu.append(item);
+		var fileMenuItem = new nw.MenuItem({ label: 'File', submenu: submenu });
+
+		if(osName == "MacOS")
+		{
+			// The first menu is the default "app" menu and should contain file
+			nativeMenuBar.insert(fileMenuItem, 1);
+		}
+		else
+		{
+			nativeMenuBar.append(fileMenuItem);
+		}
+		nw.Window.get().menu = nativeMenuBar;
+
+		nw.Window.get().showDevTools();
 
 		// search field enter
 		self.$searchField.on("keydown", function (e)
@@ -140,7 +164,7 @@ var App = function(name, version)
 
 			$(".nodes").on("mousemove", function(e)
 			{
-				
+
 				if (dragging)
 				{
 					//if(e.ctrlKey)
@@ -166,12 +190,12 @@ var App = function(name, version)
 						}
 					}
 					else
-					{	
+					{
 						MarqueeOn = true;
 
 						var scale = self.cachedScale;
 
-						if(e.pageX > offset.x && e.pageY < offset.y) 
+						if(e.pageX > offset.x && e.pageY < offset.y)
 						{
 							MarqRect.x1 = offset.x;
 							MarqRect.y1 = e.pageY;
@@ -197,10 +221,10 @@ var App = function(name, version)
 							MarqRect.x1 = e.pageX;
 							MarqRect.y1 = offset.y;
 							MarqRect.x2 = offset.x;
-							MarqRect.y2 = e.pageY;	
+							MarqRect.y2 = e.pageY;
 						}
 
-						$("#marquee").css({ x:MarqRect.x1, 
+						$("#marquee").css({ x:MarqRect.x1,
 							y:MarqRect.y1,
 							width:Math.abs(MarqRect.x1-MarqRect.x2),
 							height:Math.abs(MarqRect.y1-MarqRect.y2)});
@@ -208,7 +232,7 @@ var App = function(name, version)
 						//Select nodes which are within the marquee
 						// MarqueeSelection is used to prevent it from deselecting already
 						// selected nodes and deselecting onces which have been selected
-						// by the marquee 
+						// by the marquee
 						var nodes = self.nodes();
 						for(var i in nodes)
 						{
@@ -217,10 +241,10 @@ var App = function(name, version)
 
 							//test the Marque scaled to the nodes x,y values
 
-							var holder = $(".nodes-holder").offset(); 
-							var marqueeOverNode = (MarqRect.x2 - holder.left) / scale > nodes[i].x()  
+							var holder = $(".nodes-holder").offset();
+							var marqueeOverNode = (MarqRect.x2 - holder.left) / scale > nodes[i].x()
 											   && (MarqRect.x1 - holder.left) / scale < nodes[i].x() + nodes[i].tempWidth
-        									   && (MarqRect.y2 - holder.top) / scale > nodes[i].y()   
+        									   && (MarqRect.y2 - holder.top) / scale > nodes[i].y()
         									   && (MarqRect.y1 - holder.top) / scale < nodes[i].y() + nodes[i].tempHeight;
 
 							if(marqueeOverNode)
@@ -242,7 +266,7 @@ var App = function(name, version)
 							}
 						}
 					}
-					
+
 				}
 
 			});
@@ -313,11 +337,11 @@ var App = function(name, version)
 				x += event.pageX / self.cachedScale;
 				y += event.pageY / self.cachedScale;
 
-				self.newNodeAt(x, y); 
-			} 
+				self.newNodeAt(x, y);
+			}
 
-			return !isAllowedEl; 
-		}); 
+			return !isAllowedEl;
+		});
 
 		$(document).on('keydown', function(e){
 			//global ctrl+z
@@ -335,7 +359,7 @@ var App = function(name, version)
 		});
 
 		$(document).on('keydown', function(e) {
-			if (self.editing() || self.$searchField.is(':focus')) return;
+			if (self.editing() || self.$searchField.is(':focus') || e.metaKey || e.ctrlKey) return;
 
 			var scale = self.cachedScale || 1,
 				movement = scale * 500;
@@ -451,17 +475,17 @@ var App = function(name, version)
 
 		var historyItem = null;
 
-		if(direction == "undo") 
+		if(direction == "undo")
 			historyItem = self.nodeHistory.pop();
 		else
 			historyItem = self.nodeFuture.pop();
-		
+
 		if(!historyItem) return;
 
 		var action = historyItem.action;
 		var node = historyItem.node;
 
-		
+
 		if(direction == "undo") //undo actions
 		{
 			if(action == "created")
@@ -489,14 +513,14 @@ var App = function(name, version)
 			}
 
 			self.nodeHistory.push(historyItem);
-		}		
+		}
 	}
 
 	this.recreateNode = function(node, x, y)
 	{
 		self.nodes.push(node);
 		node.moveTo(x, y);
-		self.updateNodeLinks(); 
+		self.updateNodeLinks();
 	}
 
 	this.setSelectedColors = function(node)
@@ -505,7 +529,7 @@ var App = function(name, version)
 		nodes.splice(nodes.indexOf(node), 1);
 
 		for(var i in nodes)
-			nodes[i].colorID(node.colorID());		
+			nodes[i].colorID(node.colorID());
 	}
 
 	this.getSelectedNodes = function()
@@ -565,7 +589,7 @@ var App = function(name, version)
 		self.nodes.push(node);
 		if (updateArrows == undefined || updateArrows == true)
 			self.updateNodeLinks();
-		
+
 		self.recordNodeAction("created", node);
 
 		return node;
@@ -574,19 +598,19 @@ var App = function(name, version)
 	this.newNodeAt = function(x, y)
 	{
 		var node = new Node();
-		
+
 		self.nodes.push(node);
 
 		node.x(x-100);
 		node.y(y-100);
-		self.updateNodeLinks();
+		// self.updateNodeLinks();
 		self.recordNodeAction("created", node);
 
 		return node;
 	}
 
 	this.removeNode = function(node)
-	{	
+	{
 		if(node.selected)
 		{
 			self.deleteSelectedNodes();

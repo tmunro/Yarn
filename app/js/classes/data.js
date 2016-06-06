@@ -33,7 +33,7 @@ var data =
 		else if (window.File && window.FileReader && window.FileList && window.Blob && e.target && e.target.files && e.target.files.length > 0)
 		{
 			var reader  = new FileReader();
-			reader.onloadend = function(e) 
+			reader.onloadend = function(e)
 			{
 				if (e.srcElement && e.srcElement.result && e.srcElement.result.length > 0)
 				{
@@ -77,7 +77,7 @@ var data =
 		// is json?
 		if (/^[\],:{}\s]*$/.test(clone.replace(/\\["\\\/bfnrtu]/g, '@').
 			replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
-			replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) 
+			replace(/(?:^|:|,)(?:\s*\[)+/g, '')))
 			return FILETYPE.JSON;
 
 		// is xml?
@@ -171,7 +171,7 @@ var data =
 		{
 			var node = new Node();
 			app.nodes.push(node);
-			
+
 			var object = objects[i]
 			if (object.title != undefined)
 				node.title(object.title);
@@ -200,8 +200,8 @@ var data =
 		for (var i = 0; i < nodes.length; i ++)
 		{
 			content.push({
-				"title": nodes[i].title(), 
-				"tags": nodes[i].tags(), 
+				"title": nodes[i].title(),
+				"tags": nodes[i].tags(),
 				"body": nodes[i].body(),
 				"position": { "x": nodes[i].x(), "y": nodes[i].y() },
 				"colorID": nodes[i].colorID()
@@ -246,7 +246,7 @@ var data =
 	{
 		if (app.fs != undefined)
 		{
-			app.fs.writeFile(path, content, {encoding: 'utf-8'}, function(err) 
+			app.fs.writeFile(path, content, {encoding: 'utf-8'}, function(err)
 			{
 				data.editingPath(path);
 				if(err)
@@ -330,11 +330,24 @@ var data =
 		data.saveFileDialog($('#save-file'), type, data.getSaveData(type));
 	},
 
-	trySaveCurrent: function()
+	trySaveCurrent: function(type)
 	{
-		if (data.editingPath().length > 0 && data.editingType().length > 0)
+		if(data.editingPath() != undefined)
 		{
-			data.saveTo(data.editingPath(), data.getSaveData(data.editingType()));
+			if (data.editingPath().length > 0 && data.editingType().length > 0)
+			{
+				data.saveTo(data.editingPath(), data.getSaveData(data.editingType()));
+			}
+		}
+		else
+		{
+			if(type == undefined)
+			{
+				type = FILETYPE.JSON;
+			}
+
+			data.editingType(type);
+			data.saveFileDialog($('#save-file'), type, data.getSaveData(type));
 		}
 	}
 

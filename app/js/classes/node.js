@@ -3,6 +3,15 @@ const NodeExpandWidth = 300;
 const NodeExpandHeight = 150;
 const ClipNodeTextLength = 1024;
 
+ko.subscribable.fn.subscribeChanged = function (callback, context) {
+    var savedValue = this.peek();
+    return this.subscribe(function (latestValue) {
+        var oldValue = savedValue;
+        savedValue = latestValue;
+        callback.call(context, latestValue, oldValue);
+    });
+};
+
 var Node = function()
 {
 	var self = this;
@@ -24,7 +33,7 @@ var Node = function()
 	this.selected = false;
 
 	// clipped values for display
-	this.clippedTags = ko.computed(function() 
+	this.clippedTags = ko.computed(function()
 	{
 		var tags = this.tags().split(" ");
 		var output = "";
@@ -36,7 +45,7 @@ var Node = function()
         return output;
     }, this);
 
-	this.clippedBody = ko.computed(function() 
+	this.clippedBody = ko.computed(function()
 	{
 		var result = app.getHighlightedText(this.body());
 		while (result.indexOf("\n") >= 0)
@@ -55,6 +64,11 @@ var Node = function()
 	this.element = null;
 
 	this.canDoubleClick = true;
+
+	this.title.subscribeChanged(function(oldValue, newValue)
+	{
+		console.log("Changed name of node from "+oldValue+" to "+newValue);
+	});
 
 	this.create = function()
 	{
@@ -91,12 +105,12 @@ var Node = function()
 	this.setSelected = function(select)
 	{
 		self.selected = select;
-		
-		if(self.selected) 
+
+		if(self.selected)
 			$(self.element).css({border: "1px solid #49eff1"});
-		else 
+		else
 			$(self.element).css({border: "none"});
-		
+
 	}
 
 	this.toggleSelected = function()
@@ -147,7 +161,7 @@ var Node = function()
 	}
 
 	this.cycleColorUp = function()
-	{	
+	{
 		self.doCycleColorUp();
 
 		setTimeout(self.resetDoubleClick, 500);
@@ -173,7 +187,7 @@ var Node = function()
 		if (self.colorID() > 6)
 			self.colorID(0);
 	}
-	
+
 	this.remove = function()
 	{
 		$(self.element).transition({opacity: 0, scale: 0.8, y: "-=80px", rotate: "-45deg"}, 250, "easeInQuad", function()
@@ -191,7 +205,7 @@ var Node = function()
 		var offset = [0, 0];
 		var moved = false;
 
-		$(document.body).on("mousemove", function(e) 
+		$(document.body).on("mousemove", function(e)
 		{
 			if (dragging)
 			{
@@ -212,12 +226,12 @@ var Node = function()
 					{
 						nodes = app.getSelectedNodes();
 						nodes.splice(nodes.indexOf(self), 1);
-					}	
+					}
 					else
 					{
 						nodes = app.getNodesConnectedTo(self);
 					}
-					
+
 					if (nodes.length > 0)
 					{
 						for (var i in nodes)
@@ -233,7 +247,7 @@ var Node = function()
 			}
 		});
 
-		$(self.element).on("mousedown", function (e) 
+		$(self.element).on("mousedown", function (e)
 		{
 			if (!dragging && self.active())
 			{
@@ -265,7 +279,7 @@ var Node = function()
 			moved = false;
 		});
 
-		$(document.body).on("mouseup", function (e) 
+		$(document.body).on("mouseup", function (e)
 		{
 			dragging = false;
 			groupDragging = false;
@@ -312,24 +326,47 @@ var Node = function()
 			var exists = {};
 			for (var i = links.length - 1; i >= 0; i --)
 			{
+				// Strip [[]] and make lowercase
 				links[i] = links[i].substr(2, links[i].length - 4).toLowerCase();
 
+				// If there's a split character, use the second half of the link
 				if (links[i].indexOf("|") >= 0)
 					links[i] = links[i].split("|")[1];
 
+				// If there's already a link to this node, remove it from the links list
+				// Feels like it would be easier to do a filter on the list instead
 				if (exists[links[i]] != undefined)
 					links.splice(i, 1);
-				
+
 				exists[links[i]] = true;
 			}
 
 			// update links
-			for (var index in app.nodes())
+			for (var i = 0; i < links.length; i ++)
 			{
-				var other = app.nodes()[index];
-				for (var i = 0; i < links.length; i ++)
-					if (other != self && other.title().toLowerCase() == links[i])
-						self.linkedTo.push(other);
+				var found = null;
+				for (var index in app.nodes())
+				{
+					var other = app.nodes()[index];
+					// Filter out self
+					if(other == self)
+						continue;
+
+					if (other.title().toLowerCase() == links[i])
+					{
+						found = other;
+						break;
+					}
+				}
+
+				// Can't find a link for this one, automatically create it
+				if(found == null)
+				{
+					var found = app.newNodeAt(self.x() + 50, self.y() + 50);
+					found.title(links[i]);
+				}
+
+				self.linkedTo.push(found);
 			}
 		}
 	}
@@ -343,15 +380,15 @@ var Node = function()
 	}
 }
 
-ko.bindingHandlers.nodeBind = 
+ko.bindingHandlers.nodeBind =
 {
-	init: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
+	init: function(element, valueAccessor, allBindings, viewModel, bindingContext)
 	{
 		bindingContext.$rawData.element = element;
 		bindingContext.$rawData.create();
 	},
 
-	update: function(element, valueAccessor, allBindings, viewModel, bindingContext) 
+	update: function(element, valueAccessor, allBindings, viewModel, bindingContext)
 	{
 		$(element).on("mousedown", function() { Utils.pushToTop($(element)); });
 	}
