@@ -57,6 +57,8 @@ var data =
 	{
 		data.readFile(e, filename, true);
 
+		localStorage.lastOpen = filename;
+
 		app.refreshWindowTitle(filename);
 	},
 
@@ -94,11 +96,22 @@ var data =
 		return FILETYPE.UNKNOWN;
 	},
 
+	newFile: function()
+	{
+		data.clearData();
+		data.editingPath(null);
+	},
+
+	clearData: function()
+	{
+		app.nodes.removeAll();
+	},
+
 	loadData: function(content, type, clearNodes)
 	{
 		// clear all content
 		if (clearNodes)
-			app.nodes.removeAll();
+			data.clearData();
 
 		var objects = [];
 		var i = 0;
@@ -251,6 +264,8 @@ var data =
 				data.editingPath(path);
 				if(err)
 					alert("Error Saving Data to " + path + ": " + err);
+				else
+					localStorage.lastOpen = path;
 			});
 		}
 	},

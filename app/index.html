@@ -67,6 +67,7 @@
 				<div class="menu">
 					<span class="title">File</span>
 					<div class="dropdown">
+						<span class="item" data-bind="click: data.newFile">New</span>
 						<span class="item" data-bind="click: data.tryOpenFile">Open...</span>
 						<!--<span class="item" data-bind="click: data.tryOpenFolder">Open Folder...</span>-->
 						<span class="item" data-bind="click: data.tryAppend">Append...</span>
@@ -118,9 +119,9 @@
 					<div class="editor-container">
 						<div class="editor" id="editor"
 							data-bind="
-							ace: app.editing().body, 
+							ace: app.editing().body,
 							aceOptions: { mode: 'yarn', theme: 'yarn', showPrintMargin: false }">
-						</div> 
+						</div>
 					</div>
 					<!--<div class="icon close" data-bind="click:app.saveNode"></div>-->
 				</div>

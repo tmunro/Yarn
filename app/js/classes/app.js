@@ -56,7 +56,14 @@ var App = function(name, version)
 
 		self.canvas = $(".arrows")[0];
 		self.context = self.canvas.getContext('2d');
-		self.newNode().title("Start");
+		if(localStorage.lastOpen != null)
+		{
+			data.openFile(null, localStorage.lastOpen);
+		}
+		else
+		{
+			self.newNode().title("Start");
+		}
 
 		var nativeMenuBar = new nw.Menu({ type: "menubar" });
 		if(osName == "MacOS")
@@ -130,6 +137,7 @@ var App = function(name, version)
 				});
 			}
 		};
+
 
 		// updateArrows
 		setInterval(function() { self.updateArrows(); }, 16);
