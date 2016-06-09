@@ -65,10 +65,6 @@ var Node = function()
 
 	this.canDoubleClick = true;
 
-	this.title.subscribeChanged(function(oldValue, newValue)
-	{
-		console.log("Changed name of node from "+oldValue+" to "+newValue);
-	});
 
 	this.create = function()
 	{
@@ -327,7 +323,7 @@ var Node = function()
 			for (var i = links.length - 1; i >= 0; i --)
 			{
 				// Strip [[]] and make lowercase
-				links[i] = links[i].substr(2, links[i].length - 4).toLowerCase();
+				links[i] = links[i].substr(2, links[i].length - 4);
 
 				// If there's a split character, use the second half of the link
 				if (links[i].indexOf("|") >= 0)
@@ -352,7 +348,7 @@ var Node = function()
 					if(other == self)
 						continue;
 
-					if (other.title().toLowerCase() == links[i])
+					if (other.title() == links[i])
 					{
 						found = other;
 						break;
@@ -370,6 +366,31 @@ var Node = function()
 			}
 		}
 	}
+
+	this.title.subscribeChanged(function(newValue, oldValue)
+	{
+        var nodes = app.getNodesConnectedTo(self);
+		for (var i in nodes)
+        {
+            nodes[i].renameLink(oldValue, newValue);
+        }
+	});
+
+    this.renameLink = function(oldLinkName, newName)
+    {
+        var links = self.body().match(/\[\[(.*?)\]\]/g);
+        for(var i in links)
+        {
+            var pipeIndex = links[i].indexOf("|");
+            var linkIndex = links[i].indexOf(oldLinkName);
+            if(linkIndex > -1 && (pipeIndex == -1 || pipeIndex < linkIndex))
+            {
+                var newLink = links[i].replace(oldLinkName, newName);
+                console.log(newLink);
+                self.body(self.body().replace(links[i], newLink));
+            }
+        }
+    }
 
 	this.getScale = function() {
 		if (app && typeof app.cachedScale === 'number') {
