@@ -292,16 +292,21 @@ var Node = function()
 
 	this.isConnectedTo = function(otherNode, checkBack)
 	{
-		if (checkBack && otherNode.isConnectedTo(self, false))
-			return true;
+		// if (checkBack && otherNode.isConnectedTo(self, false))
+        // {
+        //     console.log(otherNode.title()+" is connected to "+self.title());
+        //     return true;
+        // }
 
-        // console.log(otherNode.title()+" is connected to...")
 
 		var linkedNodes = self.linkedTo();
 		for (var i in linkedNodes)
 		{
 			if (linkedNodes[i] == otherNode)
+            {
+                console.log(otherNode.title()+" is connected to "+self.title())
 				return true;
+            }
 			// if (linkedNodes[i].isConnectedTo(otherNode, false))
 			// 	return true;
 			// if (otherNode.isConnectedTo(linkedNodes[i], false))
@@ -372,6 +377,8 @@ var Node = function()
 	this.title.subscribeChanged(function(newValue, oldValue)
 	{
         var nodes = app.getNodesConnectedTo(self);
+        // console.log("Old: "+oldValue);
+        // console.log("New: "+newValue);
 		for (var i in nodes)
         {
             nodes[i].renameLink(oldValue, newValue);
@@ -384,10 +391,28 @@ var Node = function()
         for(var i in links)
         {
             var pipeIndex = links[i].indexOf("|");
-            var linkIndex = links[i].indexOf(oldLinkName);
-            if(linkIndex > -1 && (pipeIndex == -1 || pipeIndex < linkIndex))
+            var linkIndex = links[i].lastIndexOf(oldLinkName);
+            // console.log("Link: "+linkIndex);
+            // console.log("PipeIndex: "+linkIndex);
+
+            var newLink = null;
+
+            // If there's a split character, use the second half of the link
+            if (links[i].indexOf("|") >= 0)
             {
-                var newLink = links[i].replace(oldLinkName, newName);
+                var parts = links[i].split("|");
+                if(parts[1].indexOf(oldLinkName) >= 0)
+                {
+                    newLink = parts[0] + "|" + parts[1].replace(oldLinkName, newName);
+                }
+            }
+            else if(links[i].indexOf(oldLinkName >= 0))
+            {
+                newLink = links[i].replace(oldLinkName, newName);
+            }
+
+            if(newLink != null)
+            {
                 console.log(newLink);
                 self.body(self.body().replace(links[i], newLink));
             }
