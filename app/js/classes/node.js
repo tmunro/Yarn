@@ -295,15 +295,17 @@ var Node = function()
 		if (checkBack && otherNode.isConnectedTo(self, false))
 			return true;
 
+        // console.log(otherNode.title()+" is connected to...")
+
 		var linkedNodes = self.linkedTo();
 		for (var i in linkedNodes)
 		{
 			if (linkedNodes[i] == otherNode)
 				return true;
-			if (linkedNodes[i].isConnectedTo(otherNode, false))
-				return true;
-			if (otherNode.isConnectedTo(linkedNodes[i], false))
-				return true;
+			// if (linkedNodes[i].isConnectedTo(otherNode, false))
+			// 	return true;
+			// if (otherNode.isConnectedTo(linkedNodes[i], false))
+			// 	return true;
 		}
 
 		return false;

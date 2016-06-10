@@ -97,7 +97,7 @@ var App = function(name, version)
 		}
 		nw.Window.get().menu = nativeMenuBar;
 
-		nw.Window.get().showDevTools();
+		// nw.Window.get().showDevTools();
 
 		// search field enter
 		self.$searchField.on("keydown", function (e)
