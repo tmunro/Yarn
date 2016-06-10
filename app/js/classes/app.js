@@ -74,7 +74,7 @@ var App = function(name, version)
 		var modifier = osName == "MacOS" ? "cmd" : "ctrl";
 
 		var item = new nw.MenuItem({
-			label: "Save",
+			label: "Super Save",
 			click: function() {
 				data.trySaveCurrent();
 			},
